@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateDogsDto } from './dto/create-dogs-dto.js';
+import { UpdateDogsDto } from './dto/update-dogs-dto.js';
 import { Dog } from './entities/dog.entity.js';
 
 @Injectable()
@@ -32,5 +33,20 @@ export class DogsService {
     }
     return Dog;
   }
+
+  async update(id: Number, UpdateDogsDto: UpdateDogsDto): Promise<Dog>{
+    const dog = await this.findOne(id);
+    Object.assign(dog, UpdateDogsDto)
+    return await this, this.DogRepository.save(dog);
+  }
+
+
+  async remove(id: number): Promise<void> {
+    const result = await this.DogRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Cat with ID ${id} not found`);
+    }
+  }
+
 
 }

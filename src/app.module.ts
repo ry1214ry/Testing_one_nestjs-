@@ -7,7 +7,7 @@ import { Cat } from './cats/entities/cat.entity.js';
 import { DogsModule } from './dogs/dogs.module.js';
 @Module({
   imports: [
-    
+
     // 1. Database Connection Configuration
     TypeOrmModule.forRoot({
       type: 'postgres',
