@@ -24,8 +24,6 @@ export class DogsService {
     return await this.DogRepository.find();
   }
 
-  
-
   // get data by id
   async findOne(id: Number): Promise<Dog> {
     const Dog = await this.DogRepository.findOneBy({ id });
