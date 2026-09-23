@@ -30,13 +30,21 @@ export class CarsService {
     return Car;
   }
 
-  async update(id: number, updateCarDto: UpdateCarDto): Promise<Car>{
-    const Car = await this.findOne(id);
-    Object.assign(Car, UpdateCarDto)
-    return   this, this.CarRepository.save(updateCarDto)
+   async update(id: number, updateCarDto: UpdateCarDto) {
+  const car = await this.CarRepository.findOneBy({ id });
+  if (!car) {
+    throw new NotFoundException(`Car with ID ${id} not found`);
   }
+  Object.assign(car, updateCarDto);
+  return await this.CarRepository.save(car);
+}
 
-  remove(id: number) {
-    return `This action removes a #${id} car`;
-  }
+   async remove(id: number): Promise<void>{
+      const result = await this.CarRepository.delete(id);
+      if (result.affected === 0) {
+          throw new NotFoundException(`car wiht ${id} not found `);
+      }
+    }
+
+
 }
