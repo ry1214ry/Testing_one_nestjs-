@@ -38,7 +38,6 @@ export class CarsService {
   return await this.CarRepository.save(car);
     }
 
-    
    async remove(id: number): Promise<void>{
       const result = await this.CarRepository.delete(id);
       if (result.affected === 0) {
