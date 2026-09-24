@@ -14,13 +14,11 @@ import { CreateCatDto } from './dto/create-cat-dto.js';
 import { UpdateCatDto } from './dto/update-cat-dto.js';
 import { Cat } from './entities/cat.entity.js';
 
-
 @Controller('cats')
 export class CatsController {
-  
   constructor(private readonly catsService: CatsService) {}
 
-  @Get() // Get all cats
+  @Get('all') // Get all cats
   findAll(): Promise<Cat[]> {
     return this.catsService.findAll();
   }
@@ -30,12 +28,12 @@ export class CatsController {
     return this.catsService.findOne(id);
   }
 
-  @Post() // Create a new cat
+  @Post('create') // Create a new cat
   create(@Body() dto: CreateCatDto): Promise<Cat> {
     return this.catsService.create(dto);
   }
 
-  @Patch(':id') // Update a cat by ID
+  @Patch('update/:id') // Update a cat by ID
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateCatDto,
@@ -43,9 +41,8 @@ export class CatsController {
     return this.catsService.update(id, dto);
   }
 
-  @Delete(':id') // Delete a cat by ID
+  @Delete('delete/:id') // Delete a cat by ID
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.catsService.remove(id);
   }
-
 }

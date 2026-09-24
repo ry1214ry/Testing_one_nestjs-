@@ -7,7 +7,6 @@ import { Cat } from './cats/entities/cat.entity.js';
 import { DogsModule } from './dogs/dogs.module.js';
 @Module({
   imports: [
-
     // 1. Database Connection Configuration
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -20,8 +19,10 @@ import { DogsModule } from './dogs/dogs.module.js';
       autoLoadEntities: true,
       synchronize: true,
     }),
+
+    // all module must be regitster in module glocbal
     CatsModule,
-    DogsModule
+    DogsModule, //
   ],
   controllers: [AppController],
   providers: [AppService],
