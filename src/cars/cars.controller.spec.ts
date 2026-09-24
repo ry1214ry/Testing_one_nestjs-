@@ -1,25 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { DogsController } from './dogs.controller.js';
-import { DogsService } from './dogs.service.js';
-import { Dog } from './entities/dog.entity.js';
+import { CarsController } from './cars.controller.js';
+import { CarsService } from './cars.service.js';
+import { Car } from './entities/car.entity.js';
 
-describe('DogsController', () => {
-  let controller: DogsController;
+describe('CarsController', () => {
+  let controller: CarsController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [DogsController],
+      controllers: [CarsController],
       providers: [
-        DogsService,
+        CarsService,
         {
-          provide: getRepositoryToken(Dog),
+          provide: getRepositoryToken(Car),
           useValue: {},
         },
       ],
     }).compile();
 
-    controller = module.get<DogsController>(DogsController);
+    controller = module.get<CarsController>(CarsController);
   });
 
   it('should be defined', () => {

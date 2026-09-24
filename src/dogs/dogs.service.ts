@@ -37,7 +37,7 @@ export class DogsService {
   async update(id: Number, UpdateDogsDto: UpdateDogsDto): Promise<Dog>{
     const dog = await this.findOne(id);
     Object.assign(dog, UpdateDogsDto)
-    return await this, this.DogRepository.save(dog);
+    return await this.DogRepository.save(dog);
   }
 
 
