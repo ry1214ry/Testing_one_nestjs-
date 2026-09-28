@@ -21,6 +21,7 @@ export class AuthService {
     return  await  this.AuthRepository.find();
   }
 
+
   async findOne(id: number):Promise<Auth>{
     const Auth = await this.AuthRepository.findOneBy({ id })
     if (!Auth) {
@@ -44,4 +45,5 @@ export class AuthService {
       throw new NotFoundException(`Auth with id ${id} not found`);
     }
   }
+  
 }
