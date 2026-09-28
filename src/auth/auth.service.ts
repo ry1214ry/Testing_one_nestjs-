@@ -36,9 +36,17 @@ export class AuthService {
     const email = dto.email.toLowerCase().trim();
     const username = dto.username.trim();
 
+<<<<<<< HEAD
     const existingUsername = await this.userRepository.findOneBy({ username });
     if (existingUsername) {
       throw new ConflictException('Username is already taken');
+=======
+
+  async findOne(id: number):Promise<Auth>{
+    const Auth = await this.AuthRepository.findOneBy({ id })
+    if (!Auth) {
+      throw new NotFoundException(`Auth wiht id ${id} not foud `)
+>>>>>>> 69d09cd6460030f44daca8359ce5aa2bd8c174f8
     }
 
     const existing = await this.userRepository.findOneBy({ email });
@@ -115,6 +123,7 @@ export class AuthService {
     this.logger.log(`Tokens refreshed for user: ${user.email}`);
     return this.buildAuthResponse(user, tokens);
   }
+<<<<<<< HEAD
 
   async logout(userId: string, refreshToken: string): Promise<void> {
     await this.refreshTokenRepository.update(
@@ -194,3 +203,7 @@ export class AuthService {
     };
   }
 }
+=======
+  
+}
+>>>>>>> 69d09cd6460030f44daca8359ce5aa2bd8c174f8

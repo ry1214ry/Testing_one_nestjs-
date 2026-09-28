@@ -4,11 +4,17 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module.js';
+<<<<<<< HEAD
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor.js';
+=======
+import { TransformInterceptor } from './transform/transform.interceptor.js';
+>>>>>>> 69d09cd6460030f44daca8359ce5aa2bd8c174f8
 
 async function bootstrap() {
+
   const app = await NestFactory.create(AppModule);
+<<<<<<< HEAD
   const configService = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
@@ -57,3 +63,11 @@ async function bootstrap() {
   logger.log(`Swagger UI available at http://localhost:${port}/api/docs`);
 }
 await bootstrap();
+=======
+  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalInterceptors(new TransformInterceptor());
+  await app.listen(process.env.PORT ?? 3000);
+}
+
+await bootstrap();
+>>>>>>> 69d09cd6460030f44daca8359ce5aa2bd8c174f8
