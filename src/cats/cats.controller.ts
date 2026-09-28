@@ -7,12 +7,14 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 
 import { CatsService } from './cats.service.js';
 import { CreateCatDto } from './dto/create-cat-dto.js';
 import { UpdateCatDto } from './dto/update-cat-dto.js';
 import { Cat } from './entities/cat.entity.js';
+import { ApiKeyGuard } from '../common/guards/api-key.guard.js';
 
 @Controller('cats')
 export class CatsController {
@@ -29,6 +31,7 @@ export class CatsController {
   }
 
   @Post('create') // Create a new cat
+  @UseGuards(ApiKeyGuard)
   create(@Body() dto: CreateCatDto): Promise<Cat> {
     return this.catsService.create(dto);
   }

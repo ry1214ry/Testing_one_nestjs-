@@ -12,14 +12,19 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api');
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/api (GET) is public and returns the greeting', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/api')
       .expect(200)
       .expect('Hello World!');
+  });
+
+  it('requires authentication for protected routes', async () => {
+    await request(app.getHttpServer()).get('/api/users').expect(401);
   });
 
   afterEach(async () => {

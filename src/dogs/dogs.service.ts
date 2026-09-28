@@ -7,21 +7,20 @@ import { Dog } from './entities/dog.entity.js';
 
 @Injectable()
 export class DogsService {
-
   constructor(
     // create repository
     @InjectRepository(Dog)
     private readonly DogRepository: Repository<Dog>,
-  ) { }
+  ) {}
 
   // create data
-  async create(createDogDto: CreateDogsDto): Promise<Dog>{
+  async create(createDogDto: CreateDogsDto): Promise<Dog> {
     const newDog = this.DogRepository.create(createDogDto);
     return await this.DogRepository.save(newDog);
   }
 
   // get all data
-  async findAll(): Promise<Dog[]>{
+  async findAll(): Promise<Dog[]> {
     return await this.DogRepository.find();
   }
 
@@ -29,17 +28,16 @@ export class DogsService {
   async findOne(id: Number): Promise<Dog> {
     const Dog = await this.DogRepository.findOneBy({ id });
     if (!Dog) {
-      throw new NotFoundException(`Dog with ID  ${id} not found `)
+      throw new NotFoundException(`Dog with ID  ${id} not found `);
     }
     return Dog;
   }
 
-  async update(id: Number, UpdateDogsDto: UpdateDogsDto): Promise<Dog>{
+  async update(id: Number, UpdateDogsDto: UpdateDogsDto): Promise<Dog> {
     const dog = await this.findOne(id);
-    Object.assign(dog, UpdateDogsDto)
+    Object.assign(dog, UpdateDogsDto);
     return await this.DogRepository.save(dog);
   }
-
 
   async remove(id: number): Promise<void> {
     const result = await this.DogRepository.delete(id);
@@ -47,6 +45,4 @@ export class DogsService {
       throw new NotFoundException(`Cat with ID ${id} not found`);
     }
   }
-
-
 }

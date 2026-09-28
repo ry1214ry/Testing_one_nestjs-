@@ -1,114 +1,215 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NestJS Security Authentication System
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A production-grade authentication & authorization system built with **NestJS**, **PostgreSQL + TypeORM**, **Passport.js (JWT)**, **bcrypt** and **@nestjs/config**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Features
 
-## Description
+- **Registration & Login** (`POST /auth/register`, `POST /auth/login`) with bcrypt password hashing (10–12 salt rounds)
+- **JWT access + refresh tokens** with **refresh token rotation** stored hashed (SHA-256) in the database
+  - Access token: 15 minutes (`JWT_AT_EXPIRES_IN=900`)
+  - Refresh token: 7 days (`JWT_RT_EXPIRES_IN=604800`)
+- **Global `JwtAuthGuard`** with a `@Public()` decorator that bypasses authentication via `Reflector`
+- **RBAC** — `Role` enum (`USER`, `ADMIN`), `@Roles()` decorator and a `RolesGuard`
+- **Security hardening**
+  - `helmet()` HTTP headers
+  - CORS restricted to origins from `.env`
+  - Rate limiting on all `/auth` endpoints via `@nestjs/throttler`
+  - Global `ValidationPipe` with `whitelist`, `forbidNonWhitelisted`, `transform`
+  - `class-validator` DTOs
+  - All secrets in `.env` validated by a config schema (no plaintext anywhere in code)
+  - Generic login errors — never reveal whether an email exists
+- **Error handling & logging** — custom global `HttpExceptionFilter` returning structured errors + NestJS `Logger` for auth events
+- **Swagger** documentation at `http://localhost:3000/api/docs`
+- **Testing** — unit tests for `AuthService`, both JWT strategies and both guards; e2e flow test (register → login → protected route → refresh/rotation)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Tech stack
 
-## Project setup
+| Area      | Choice                               |
+| --------- | ------------------------------------ |
+| Framework | NestJS 12                            |
+| Language  | TypeScript (strict, ESM)             |
+| Database  | PostgreSQL                           |
+| ORM       | TypeORM                              |
+| Auth      | Passport.js + `passport-jwt`         |
+| Hashing   | bcrypt                               |
+| Config    | `@nestjs/config` (validated)         |
+| Rate limit| `@nestjs/throttler`                  |
+| Docs      | `@nestjs/swagger`                    |
 
-```bash
-$ npm install
+## Project structure
+
+```
+src/
+├── main.ts                        # bootstrap: helmet, CORS, pipes, filter, Swagger
+├── app.module.ts                  # ConfigModule, TypeOrmModule, ThrottlerModule wiring
+├── common/
+│   ├── config/env.validation.ts   # environment schema validation
+│   ├── decorators/                # @Public, @Roles, @CurrentUser
+│   ├── enums/role.enum.ts         # USER | ADMIN
+│   ├── filters/                   # HttpExceptionFilter (structured errors)
+│   ├── guards/                    # JwtAuthGuard (global), RolesGuard, ApiKeyGuard
+│   ├── interfaces/                # JwtPayload, RequestUser, AuthResponse
+│   ├── middleware/logger.middleware.ts
+│   └── common.module.ts           # registers global guards
+├── auth/
+│   ├── auth.service.ts            # register / login / refresh / logout + rotation
+│   ├── auth.controller.ts         # endpoints, throttled, Swagger-annotated
+│   ├── strategies/                # AtStrategy (Bearer), RtStrategy (body)
+│   ├── guards/refresh-token.guard.ts
+│   └── dto/                       # Register, Login, Refresh, response DTOs
+└── users/
+    ├── entities/user.entity.ts          # users table
+    ├── entities/refresh-token.entity.ts # hashed refresh tokens table
+    ├── users.service.ts
+    ├── users.controller.ts              # /users/me + admin-only routes
+    └── dto/update-role.dto.ts
+test/
+├── auth.e2e-spec.ts               # full auth flow e2e test
+└── app.e2e-spec.ts
 ```
 
-## Compile and run the project
+## Setup
+
+### 1. Prerequisites
+
+- Node.js ≥ 20
+- PostgreSQL running locally with a database created:
+  ```sql
+  CREATE DATABASE "Testing_one";
+  ```
+
+### 2. Install dependencies
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
+### 3. Configure environment
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cp .env.example .env
+# then edit .env with your DB credentials and secrets
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Generate JWT secrets with:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+> `.env` is gitignored — never commit real secrets.
 
-## Observability
+### 4. Run
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+```bash
+npm run start:dev     # watch mode
+npm run build && npm run start:prod
+```
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+Tables are auto-created via TypeORM `synchronize` (dev only; disabled when `NODE_ENV=production`).
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
+## Environment variables
 
-## Resources
+| Variable             | Description                      | Default                     |
+| -------------------- | -------------------------------- | --------------------------- |
+| `NODE_ENV`           | `development` / `production`     | `development`               |
+| `PORT`               | HTTP port                        | `3000`                      |
+| `DATABASE_HOST`      | PostgreSQL host                  | `localhost`                 |
+| `DATABASE_PORT`      | PostgreSQL port                  | `5432`                      |
+| `DATABASE_USER`      | DB user                          | `postgres`                  |
+| `DATABASE_PASSWORD`  | DB password                      | —                           |
+| `DATABASE_NAME`      | DB name                          | —                           |
+| `JWT_AT_SECRET`      | Access token signing secret (≥32 chars) | —                    |
+| `JWT_RT_SECRET`      | Refresh token signing secret (≥32 chars) | —                   |
+| `JWT_AT_EXPIRES_IN`  | Access token TTL (seconds)       | `900` (15 min)              |
+| `JWT_RT_EXPIRES_IN`  | Refresh token TTL (seconds)      | `604800` (7 days)           |
+| `BCRYPT_SALT_ROUNDS` | bcrypt cost (10–12)              | `12`                        |
+| `CORS_ORIGINS`       | Comma-separated allowed origins  | `http://localhost:3000,...` |
+| `THROTTLE_TTL`       | Rate limit window (seconds)      | `60`                        |
+| `THROTTLE_LIMIT`     | Max requests per window          | `10`                        |
 
-Check out a few resources that may come in handy when working with NestJS:
+## API endpoints
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Base path: `/api`
 
-## Support
+### Auth (`/api/auth`) — rate limited
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+| Method | Endpoint  | Auth        | Description                                                       |
+| ------ | --------- | ----------- | ----------------------------------------------------------------- |
+| POST   | `/auth/register` | Public      | Register a user, returns `{ accessToken, refreshToken, user }` |
+| POST   | `/auth/login`    | Public      | Login, returns `{ accessToken, refreshToken, user }`           |
+| POST   | `/auth/refresh`  | Refresh token in body | Rotates the refresh token, returns a new pair               |
+| POST   | `/auth/logout`   | Refresh token in body | Revokes the presented refresh token                            |
+| GET    | `/auth/me`       | Bearer token | Returns the current user parsed from the access token            |
 
-## Stay in touch
+**Request example — register:**
+```json
+{
+  "email": "user@example.com",
+  "password": "Str0ngPass123"
+}
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+**Response 201:**
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
+  "user": { "id": "a4c0...", "email": "user@example.com", "role": "USER" }
+}
+```
 
-## License
+**Refresh** — send the refresh token in the JSON body:
+```json
+{ "refreshToken": "eyJhbGciOiJIUzI1NiIs..." }
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Users (`/api/users`) — protected
+
+| Method | Endpoint          | Auth                  | Description                   |
+| ------ | ----------------- | --------------------- | ----------------------------- |
+| GET    | `/users/me`       | Any authenticated user| Current user profile          |
+| GET    | `/users`          | `ADMIN` only          | List all users (admin-only route example) |
+| GET    | `/users/:id`      | `ADMIN` only          | Get a single user             |
+| PATCH  | `/users/:id/role` | `ADMIN` only          | Change a user's role          |
+
+**Authentication:** set the access token as a Bearer header:
+```
+Authorization: Bearer <accessToken>
+```
+
+## Security details
+
+- **Password hashing** — bcrypt with 12 salt rounds; plaintext passwords are never stored.
+- **Refresh token rotation** — on every `/auth/refresh` the old token is revoked in DB and a new hash is stored. Reusing a rotated/expired token revokes **all** of the user's refresh tokens (reuse detection).
+- **No plaintext tokens in DB** — only `SHA-256` hashes of refresh tokens are persisted.
+- **Generic login errors** — both wrong-password and unknown-email return the identical `401 Invalid email or password`.
+- **Config validation** — the app refuses to start if a required env var is missing/invalid (`validateEnvironment`).
+- **Rate limiting** — all `/auth` endpoints are capped at `THROTTLE_LIMIT` requests per `THROTTLE_TTL`.
+
+## Swagger
+
+Interactive docs with bearer-auth support:
+
+```
+http://localhost:3000/api/docs
+```
+
+## Testing
+
+```bash
+npm test          # unit tests (AuthService, AtStrategy, RtStrategy, JwtAuthGuard, RolesGuard, ...)
+npm run test:e2e  # e2e: register → login → protected route → refresh/rotation → logout
+npm run test:cov  # coverage
+```
+
+The e2e suite verifies the full security flow against the real database:
+
+1. `register` returns an access + refresh token
+2. duplicate registration → `409`
+3. `login` returns a fresh pair
+4. wrong password / unknown email → identical generic `401`
+5. access a protected route with the access token → `200`
+6. admin-only route with a `USER` role → `403`
+7. `refresh` rotates the token; the old token can no longer be used (`401`)
+8. `logout` revokes the presented refresh token
