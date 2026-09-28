@@ -9,13 +9,14 @@ export class LoggingTimeInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();
     const { method, url } = request;
-    const startTime = Date.now(); // ⏱️ Start timer
+    const startTime = Date.now();
 
     return next.handle().pipe(
       tap(() => {
-        const duration = Date.now() - startTime; // 🕒 Calculate time taken
+        const duration = Date.now() - startTime;
         this.logger.log(`⚡ [${method}] ${url} took ${duration}ms to complete`);
       }),
     );
+    
   }
 }

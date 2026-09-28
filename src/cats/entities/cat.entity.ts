@@ -1,8 +1,8 @@
-// src/cats/entities/cat.entity.ts
+
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-@Entity() // <--- Make sure this decorator is above the class
+@Entity()
 export class Cat {
-  @PrimaryGeneratedColumn()  
+  @PrimaryGeneratedColumn()
   id: number;
   @Column()
   name: string;
@@ -11,3 +11,8 @@ export class Cat {
   @Column()
   sound: string;
 }
+
+
+
+
+

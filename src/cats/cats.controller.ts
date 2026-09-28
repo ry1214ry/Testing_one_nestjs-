@@ -6,7 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
-  Post,
+  Post
 } from '@nestjs/common';
 
 import { CatsService } from './cats.service.js';
@@ -19,6 +19,7 @@ export class CatsController {
   constructor(private readonly catsService: CatsService) {}
 
   @Get('all') // Get all cats
+
   findAll(): Promise<Cat[]> {
     return this.catsService.findAll();
   }
@@ -29,6 +30,7 @@ export class CatsController {
   }
 
   @Post('create') // Create a new cat
+
   create(@Body() dto: CreateCatDto): Promise<Cat> {
     return this.catsService.create(dto);
   }
