@@ -29,7 +29,6 @@ export class AuthService {
     }
     return Auth;
   }
-
   async  update(id: number, updateAuthDto: UpdateAuthDto){
     const auth = await this.AuthRepository.findOneBy({ id });
     if (!auth) {
@@ -45,5 +44,5 @@ export class AuthService {
       throw new NotFoundException(`Auth with id ${id} not found`);
     }
   }
-  
+
 }
