@@ -6,9 +6,11 @@ import {
   Param,
   ParseIntPipe,
   Patch,
-  Post
+  Post,
+  UseGuards
 } from '@nestjs/common';
 
+import { AuthGuard } from '@nestjs/passport';
 import { CatsService } from './cats.service.js';
 import { CreateCatDto } from './dto/create-cat-dto.js';
 import { UpdateCatDto } from './dto/update-cat-dto.js';
@@ -30,7 +32,7 @@ export class CatsController {
   }
 
   @Post('create') // Create a new cat
-
+  @UseGuards(AuthGuard('jwt'))
   create(@Body() dto: CreateCatDto): Promise<Cat> {
     return this.catsService.create(dto);
   }
