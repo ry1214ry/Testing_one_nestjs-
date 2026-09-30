@@ -1,15 +1,14 @@
 // src/auths/auths.module.ts
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity.js';
 import { AuthController } from './auths.controller.js';
 import { AuthService } from './auths.service.js';
-import { RtStrategy } from './strategies/jwt.strategy.js';
+import { JwtStrategy } from './strategies/jwt.strategy.js';
 
-
-
+@Global()
 @Module({
   imports: [
     PassportModule,
@@ -19,10 +18,13 @@ import { RtStrategy } from './strategies/jwt.strategy.js';
   controllers: [AuthController],
   providers: [
     AuthService,
-    RtStrategy, // <-- TypeScript will now recognize this!
-    RtStrategy,  // <-- And this!
+    JwtStrategy, // <-- Must be here so NestJS registers the 'jwt' strategy!
+    JwtStrategy,  // <-- Registers the 'jwt-refresh' strategy
   ],
-  
-  exports: [AuthService],
+  exports: [
+    AuthService,
+    JwtStrategy,
+  ],
 })
-export class AuthModule {}
+export class AuthModule { }
+

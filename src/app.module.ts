@@ -1,15 +1,20 @@
-import { CacheModule } from '@nestjs/cache-manager'; // 💾 Fixed: Added missing import
+import { CacheModule } from '@nestjs/cache-manager';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config'; // 👈 1. Added this import
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
-
 import { AuthModule } from './auths/auths.module.js';
-import { CatsModule } from './cats/cats.module.js';
-import { Cat } from './cats/entities/cat.entity.js';
+import { DogsModule } from './dogs/dogs.module.js';
 
 @Module({
   imports: [
+
+    // 👈 2. Added this block to load your .env file globally!
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
 
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -17,25 +22,25 @@ import { Cat } from './cats/entities/cat.entity.js';
       port: 5432,
       username: 'postgres',
       password: 'Xanji!@#3210',
-      database: 'lessone7day',
-      entities: [Cat],
+      database: 'lessone7day', // (Make sure your db credentials are correct here!)
       autoLoadEntities: true,
       synchronize: true,
     }),
 
-     CacheModule.register({
+    CacheModule.register({
       isGlobal: true,
       ttl: 5000,
-       max: 10,
-     }),
+      max: 10,
+    }),
+
     AuthModule,
-    CatsModule,
+    DogsModule
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
+    
   }
 }

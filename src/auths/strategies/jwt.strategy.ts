@@ -1,29 +1,19 @@
-// src/auth/strategies/rt.strategy.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+// src/auths/strategies/jwt.strategy.ts
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Request } from 'express';
 
 @Injectable()
-export class RtStrategy extends PassportStrategy(Strategy, 'jwt-refresh',) {
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_REFRESH_SECRET || 'super-refresh-secret',
-      passReqToCallback: true,
+      secretOrKey: process.env.JWT_SECRET || 'super-secret-key',
     });
   }
 
-  validate(req: Request, payload: any) {
-    const authHeader = req.get('authorization');
-    if (!authHeader) throw new UnauthorizedException('Refresh token missing');
-
-    const refreshToken = authHeader.replace('Bearer', '').trim();
-    return {
-      userId: payload.sub,
-      email: payload.email,
-      refreshToken,
-    };
+  async validate(payload: any) {
+    return { userId: payload.sub, email: payload.email };
   }
 }

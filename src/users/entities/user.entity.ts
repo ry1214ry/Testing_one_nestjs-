@@ -1,6 +1,11 @@
 // src/users/entities/user.entity.ts
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+export enum Role {
+  ADMIN = 'admin',
+  USER = 'user', // Cleaned up trailing space!
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -12,12 +17,17 @@ export class User {
   @Column()
   password: string;
 
-  // Add explicit type: 'text' (or 'varchar') so TypeORM knows how to map it
   @Column({ type: 'text', nullable: true })
   refreshToken: string | null;
 
+  // 👇 ADD THIS SO THE DATABASE STORES THE ROLE
+  @Column({
+    type: 'enum',
+    enum: Role,
+    default: Role.USER,
+  })
+  role: Role;
+
   @CreateDateColumn()
   createdAt: Date;
-
-  
 }
